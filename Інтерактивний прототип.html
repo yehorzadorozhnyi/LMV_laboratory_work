@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>ЛР 2 — Додавання товару до кошика</title>
+    <style>
+        :root {
+            --bg: #f3f6f4;
+            --fg: #16231c;
+            --card: #fff;
+            --ac: #0f766e;
+            --bd: #c9d6cf;
+            --fit: #d9262c;
+            --hik: #1d4ed8;
+            color-scheme: light dark;
+            box-sizing: border-box;
+            padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0)
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root:not([data-theme=light]) {
+                --bg: #121a16;
+                --fg: #e6f0ea;
+                --card: #1c2822;
+                --ac: #2dd4bf;
+                --bd: #34463d
+            }
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font: 16px/1.4 Georgia, serif;
+            background: var(--bg);
+            color: var(--fg)
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--bd)
+        }
+
+        header button,
+        .chip {
+            font: inherit;
+            padding: 8px 14px;
+            border: 1px solid var(--bd);
+            background: var(--card);
+            color: var(--fg);
+            border-radius: 6px;
+            cursor: pointer
+        }
+
+        header button.on,
+        .chip.on {
+            background: var(--ac);
+            color: #062;
+            border-color: var(--ac);
+            color: #fff
+        }
+
+        label.hl {
+            margin-left: auto;
+            font-size: 14px
+        }
+
+        main {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 16px
+        }
+
+        .v {
+            display: none
+        }
+
+        .v.on {
+            display: block
+        }
+
+        h2 {
+            margin: .2em 0
+        }
+
+        p.d {
+            margin: .2em 0 1em;
+            opacity: .8
+        }
+
+        .wrap {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start
+        }
+
+        .wrap>.l {
+            flex: 1
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--bd);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            position: relative
+        }
+
+        .card .e {
+            font-size: 38px
+        }
+
+        .card small {
+            opacity: .6;
+            display: block
+        }
+
+        .add {
+            width: 100%;
+            min-height: 48px;
+            margin-top: 6px;
+            font: 700 18px inherit;
+            font-family: inherit;
+            border: 0;
+            border-radius: 6px;
+            background: var(--ac);
+            color: #fff;
+            cursor: pointer
+        }
+
+        .cartbox {
+            width: 230px;
+            background: var(--card);
+            border: 1px solid var(--bd);
+            border-radius: 8px;
+            padding: 10px
+        }
+
+        .cartbox ul {
+            list-style: none;
+            margin: 6px 0 0;
+            padding: 0
+        }
+
+        .cartbox li {
+            padding: 3px 0;
+            border-bottom: 1px dotted var(--bd)
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px
+        }
+
+        #cmd {
+            width: 100%;
+            font: 28px monospace;
+            padding: 16px;
+            border: 2px solid var(--ac);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--fg)
+        }
+
+        #sg {
+            list-style: none;
+            margin: 6px 0;
+            padding: 0
+        }
+
+        #sg li {
+            padding: 8px 12px;
+            background: var(--card);
+            border: 1px solid var(--bd)
+        }
+
+        #sg li:first-child {
+            border-color: var(--ac);
+            font-weight: 700
+        }
+
+        #msg {
+            min-height: 1.5em;
+            color: var(--ac)
+        }
+
+        .zones {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 230px
+        }
+
+        .z {
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font: 700 26px inherit;
+            font-family: inherit;
+            border: 3px dashed var(--ac);
+            border-radius: 8px;
+            background: var(--card)
+        }
+
+        .z.o {
+            background: var(--ac);
+            color: #fff
+        }
+
+        .card[draggable=true] {
+            cursor: grab
+        }
+
+        /* підсвітка для скриншотів */
+        .hl-on .fitts {
+            outline: 4px dashed var(--fit);
+            outline-offset: 3px;
+            position: relative
+        }
+
+        .hl-on .hick {
+            outline: 4px dashed var(--hik);
+            outline-offset: 3px;
+            position: relative
+        }
+
+        .hl-on [data-l]::after {
+            content: attr(data-l);
+            position: absolute;
+            right: 0;
+            top: -12px;
+            font: 700 12px sans-serif;
+            background: #fff;
+            color: #000;
+            padding: 1px 6px;
+            border-radius: 4px;
+            z-index: 5
+        }
+
+        @media(max-width:700px) {
+            .wrap {
+                flex-direction: column
+            }
+
+            .cartbox,
+            .zones {
+                width: 100%
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <button data-t="a" class="on">Варіант A: кнопка «+»</button>
+        <button data-t="b">Варіант B: швидкий ввід</button>
+        <button data-t="c">Варіант C: перетягування</button>
+        <label class="hl"><input type="checkbox" id="hl"> Підсвітити закони Фітса (червоне) і Хіка (синє)</label>
+    </header>
+    <main>
+        <section class="v on" id="a">
+            <h2>A. Картка товару з кнопкою «+»</h2>
+            <p class="d">Клік по великій кнопці додає 1 шт.; повторні кліки — у тому самому місці. Приклад задачі:
+                додати Молоко ×3 (три кліки).</p>
+            <div class="wrap">
+                <div class="l">
+                    <div class="chips hick" data-l="Хік: 4 категорії"><button class="chip on"
+                            data-c="">Усі</button><button class="chip" data-c="Молочне">Молочне</button><button
+                            class="chip" data-c="Фрукти">Фрукти</button><button class="chip" data-c="Інше">Інше</button>
+                    </div>
+                    <div class="grid" id="gA"></div>
+                </div>
+                <div class="cartbox fitts" data-l="Фітс: кошик у куті"><b>Кошик (<span class="cnt">0</span>)</b>
+                    <ul class="cart"></ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="v" id="b">
+            <h2>B. Командний рядок з автодоповненням</h2>
+            <p class="d">Поле в фокусі одразу. Введіть назву або код і кількість через «*», напр. <code>мол*3</code> або
+                <code>102*3</code>, і натисніть Enter. Без миші.</p>
+            <input id="cmd" class="fitts" data-l="Фітс: фокус = нульова дистанція" placeholder="мол*3  або  102*3"
+                autocomplete="off">
+            <ul id="sg" class="hick" data-l="Хік: ≤4 підказки"></ul>
+            <div id="msg"></div>
+            <div class="cartbox"><b>Кошик (<span class="cnt">0</span>)</b>
+                <ul class="cart"></ul>
+            </div>
+        </section>
+
+        <section class="v" id="c">
+            <h2>C. Перетягування на зони кількості</h2>
+            <p class="d">Потягніть картку на одну з великих зон справа: ×1, ×3, ×5 або ×10 — зона одразу задає
+                кількість.</p>
+            <div class="wrap">
+                <div class="l">
+                    <div class="grid" id="gC"></div>
+                    <div class="cartbox" style="width:auto;margin-top:12px"><b>Кошик (<span class="cnt">0</span>)</b>
+                        <ul class="cart"></ul>
+                    </div>
+                </div>
+                <div class="hick" data-l="Хік: лише 4 пресети" style="padding:24px 12px;height:fit-content">
+                    <div class="zones fitts" data-l="Фітс: великі зони біля краю" id="zn"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script>
+        const P = [["101", "Яблука", "🍎", "Фрукти"], ["102", "Молоко", "🥛", "Молочне"], ["103", "Хліб", "🍞", "Інше"], ["104", "Сир", "🧀", "Молочне"], ["105", "Яйця", "🥚", "Молочне"], ["106", "Банани", "🍌", "Фрукти"], ["107", "Кава", "☕", "Інше"], ["108", "Чай", "🍵", "Інше"]];
+        const cart = {};
+        const tot = () => Object.values(cart).reduce((a, b) => a + b, 0);
+        function draw() {
+            const h = Object.keys(cart).map(i => { const p = P.find(x => x[0] == i); return `<li>${p[2]} ${p[1]} <b>×${cart[i]}</b></li>` }).join('') || '<li>Порожньо — додайте товар</li>';
+            document.querySelectorAll('.cart').forEach(e => e.innerHTML = h);
+            document.querySelectorAll('.cnt').forEach(e => e.textContent = tot());
+            document.querySelectorAll('.add').forEach(b => b.textContent = '+' + (cart[b.dataset.id] ? '  (' + cart[b.dataset.id] + ')' : ''));
+        }
+        const add = (id, q) => { cart[id] = (cart[id] || 0) + q; draw() };
+        const card = (p, drag) => `<div class="card" data-c="${p[3]}" ${drag ? `draggable="true" data-id="${p[0]}"` : ''}><div class="e">${p[2]}</div>${p[1]}<small>код ${p[0]}</small>${drag ? '' : `<button class="add fitts" data-id="${p[0]}">+</button>`}</div>`;
+        document.getElementById('gA').innerHTML = P.map(p => card(p, 0)).join('');
+        document.getElementById('gC').innerHTML = P.map(p => card(p, 1)).join('');
+        document.getElementById('gA').onclick = e => { const b = e.target.closest('.add'); if (b) add(b.dataset.id, 1) };
+        document.querySelectorAll('.chip').forEach(c => c.onclick = () => { document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x == c)); document.querySelectorAll('#gA .card').forEach(k => k.style.display = !c.dataset.c || k.dataset.c == c.dataset.c ? '' : 'none') });
+        /* B */
+        const cmd = document.getElementById('cmd'), sg = document.getElementById('sg'), msg = document.getElementById('msg');
+        const find = s => { s = s.trim().toLowerCase(); return s ? P.filter(p => p[0].startsWith(s) || p[1].toLowerCase().startsWith(s)) : [] };
+        cmd.oninput = () => { sg.innerHTML = find(cmd.value.split('*')[0]).slice(0, 4).map(p => `<li>${p[2]} ${p[1]} <small>(${p[0]})</small></li>`).join('') };
+        cmd.onkeydown = e => {
+            if (e.key !== 'Enter') return; const [n, q] = cmd.value.split('*'), m = find(n)[0];
+            if (!m) { msg.textContent = 'Товар не знайдено. Введіть назву або код.'; return }
+            const k = parseInt(q) || 1; add(m[0], k); msg.textContent = `Додано: ${m[1]} ×${k}`; cmd.value = ''; sg.innerHTML = ''
+        };
+        /* C */
+        const zn = document.getElementById('zn'); zn.innerHTML = [1, 3, 5, 10].map(n => `<div class="z" data-q="${n}">×${n}</div>`).join('');
+        let cur = null;
+        document.getElementById('gC').ondragstart = e => { cur = e.target.closest('.card').dataset.id; e.dataTransfer.setData('text', cur) };
+        zn.querySelectorAll('.z').forEach(z => {
+            z.ondragover = e => { e.preventDefault(); z.classList.add('o') }; z.ondragleave = () => z.classList.remove('o');
+            z.ondrop = e => { e.preventDefault(); z.classList.remove('o'); if (cur) add(cur, +z.dataset.q); cur = null }
+        });
+        /* вкладки + підсвітка */
+        document.querySelectorAll('header button').forEach(b => b.onclick = () => { document.querySelectorAll('header button').forEach(x => x.classList.toggle('on', x == b)); document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id == b.dataset.t)); if (b.dataset.t == 'b') cmd.focus() });
+        document.getElementById('hl').onchange = e => document.body.classList.toggle('hl-on', e.target.checked);
+        draw();
+    </script>
+</body>
+
+</html>
